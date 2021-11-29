@@ -11,7 +11,7 @@ const Home: NextPage = () => {
         <Sidebar />
         <Center />
       </main>
-      <div className='sticky bottom-0'>
+      <div className='absolute bottom-0 w-full'>
         <Player />
       </div>
     </div>
