@@ -1,6 +1,7 @@
 import {
     HeartIcon,
-    VolumeUpIcon as VolumeDownIcon
+    VolumeUpIcon as VolumeDownIcon,
+    ReplyIcon as ReplyOutline
 } from '@heroicons/react/outline';
 import {
     RewindIcon,
@@ -25,12 +26,21 @@ const Player: React.FC = () => {
     const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState);
     const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState);
     const [volume, setVolume] = useState<number>(50);
+    const [isRepeat, setRepeat] = useState<boolean>(false);
+    const [isSort, setSort] = useState<boolean>(false);
     const songInfo: any = useSongInfo();
+
+    useEffect(() => {
+        setVolume(50);
+        setRepeat(false);
+        setSort(false);
+        spotifyApi.setRepeat('off');
+        spotifyApi.setShuffle(false);
+    }, []);
 
     useEffect(() => {
         if (spotifyApi.getAccessToken() && !currentTrackId) {
             fetchCurrentSong();
-            setVolume(50);
         }
     }, [currentTrackIdState, spotifyApi, session]);
 
@@ -90,9 +100,36 @@ const Player: React.FC = () => {
         setVolume(volume + 5);
     }
 
+    const handlePrevTrack = () => {
+        spotifyApi.skipToPrevious();
+        spotifyApi.play();
+    }
+
+    const handleNextTrack = () => {
+        spotifyApi.skipToNext();
+        spotifyApi.play();
+    }
+
+    const handleRepeat = () => {
+        if (isRepeat) {
+            spotifyApi.setRepeat('off').then(() => setRepeat(false));
+        } else {
+            spotifyApi.setRepeat('track').then(() => setRepeat(true));
+        }
+        
+    }
+
+    const handleSort = () => {
+        if (isSort) {
+            spotifyApi.setShuffle(false).then(() => setSort(false));
+        } else {
+            spotifyApi.setShuffle(true).then(() => setSort(true));
+        }
+    }
+
     return (
-        <div className='text-white h-24 bg-gradient-to-b from-black to-gray-900 grid grid-cols-3 text-xs md:text-base px-2 md:px-8'>
-            <div className='flex items-center space-x-4'>
+        <div className='text-white h-24 bg-gradient-to-b from-black to-gray-900 grid grid-cols-1 md:grid-cols-3 text-xs md:text-base px-2 md:px-8'>
+            <div className='hidden md:flex items-center space-x-4'>
                 <img
                     className='hidden md:inline h-10 w-10'
                     src={songInfo?.album.images?.[0]?.url}
@@ -104,9 +141,13 @@ const Player: React.FC = () => {
                 </div>
             </div>
             <div className='flex items-center justify-evenly'>
-                <SwitchHorizontalIcon className='button' />
+                <SwitchHorizontalIcon
+                    className={`button ${isSort && 'text-green-500'}`}
+                    onClick={handleSort}
+                />
                 <RewindIcon
                     className='button'
+                    onClick={handlePrevTrack}
                 />
                 {isPlaying ? (
                     <PauseIcon onClick={handlePlayPause} className='button w-10 h-10' />
@@ -114,11 +155,15 @@ const Player: React.FC = () => {
                     <PlayIcon onClick={handlePlayPause} className='button w-10 h-10' />
                 )}
                 <FastForwardIcon
-                    className='button'
+                    className='button active:text-green-500'
+                    onClick={handleNextTrack}
                 />
-                <ReplyIcon className='button' />
+                <ReplyIcon
+                    className={`button ${isRepeat && 'text-green-500'}`}
+                    onClick={handleRepeat}
+                />
             </div>
-            <div className='flex items-center space-x-3 md:space-x-4 justify-end pr-5'>
+            <div className='hidden md:flex items-center space-x-3 md:space-x-4 justify-end pr-5'>
                 <VolumeDownIcon className='button' onClick={handleDownVolume} />
                 <input
                     className='w-14 md:w-28'

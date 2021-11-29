@@ -6,9 +6,10 @@ import { useRecoilState } from 'recoil';
 interface ISong {
     order: number;
     track: any;
+    tracks: any[];
 }
 
-const Song: React.FC<ISong> = ({ order, track }) => {
+const Song: React.FC<ISong> = ({ order, track , tracks }) => {
     const spotifyApi = useSpotify();
     const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState);
     const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState);
@@ -17,13 +18,13 @@ const Song: React.FC<ISong> = ({ order, track }) => {
         setCurrentTrackId(track.track.id);
         setIsPlaying(true);
         spotifyApi.play({
-            uris: [track.track.uri]
+            uris: [track.track.uri, ...tracks.filter(el => el.track.uri !== track.track.uri).map(el => el.track.uri)]
         });
     }
 
     return (
         <div
-            className='grid grid-cols-2 text-gray-500 cursor-pointer py-4 px-5 hover:bg-gray-900 rounded-lg'
+            className={`grid grid-cols-2 text-gray-500 cursor-pointer py-4 px-5 hover:bg-gray-900 rounded-lg ${currentTrackId === track.track.id && 'bg-gray-900'}`}
             onClick={playSong}
         >
             <div className='flex items-center space-x-4'>
