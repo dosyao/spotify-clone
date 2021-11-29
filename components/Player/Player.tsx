@@ -24,6 +24,7 @@ const Player: React.FC = () => {
     const spotifyApi = useSpotify();
     const { data: session, status } = useSession();
     const [currentTrackId, setCurrentTrackId] = useRecoilState(currentTrackIdState);
+    const [currentDevice, setCurrentDevide] = useState<string | null>(null);
     const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState);
     const [volume, setVolume] = useState<number>(50);
     const [isRepeat, setRepeat] = useState<boolean>(false);
@@ -36,6 +37,12 @@ const Player: React.FC = () => {
         setSort(false);
         spotifyApi.setRepeat('off');
         spotifyApi.setShuffle(false);
+
+        setInterval(fetchCurrentSong, 1000);
+
+        return () => {
+            clearInterval();
+        }
     }, []);
 
     useEffect(() => {
@@ -55,15 +62,13 @@ const Player: React.FC = () => {
     }, 500), []);
 
     const fetchCurrentSong = () => {
-        if (!songInfo) {
-            spotifyApi.getMyCurrentPlayingTrack().then((data: any) => {
-                setCurrentTrackId(data.body?.item?.id);
+        spotifyApi.getMyCurrentPlayingTrack().then((data: any) => {
+            setCurrentTrackId(data.body?.item?.id);
 
-                spotifyApi.getMyCurrentPlaybackState().then((data: any) => {
-                    setIsPlaying(data.body?.is_playing);
-                });
+            spotifyApi.getMyCurrentPlaybackState().then((data: any) => {
+                setIsPlaying(data.body?.is_playing);
             });
-        }
+        });
     }
 
     const handlePlayPause = () => {
@@ -103,11 +108,13 @@ const Player: React.FC = () => {
     const handlePrevTrack = () => {
         spotifyApi.skipToPrevious();
         spotifyApi.play();
+        fetchCurrentSong();
     }
 
     const handleNextTrack = () => {
         spotifyApi.skipToNext();
         spotifyApi.play();
+        fetchCurrentSong();
     }
 
     const handleRepeat = () => {
